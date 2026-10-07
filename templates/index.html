@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Ecommerce Product Manager</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .form-container {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        input {
+            padding: 10px;
+            margin: 5px;
+            width: 180px;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #f5f5f5;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<h1>Ecommerce Product Manager</h1>
+
+
+<div class="form-container">
+
+    <h2>Add Product</h2>
+
+    <input
+        id="name"
+        placeholder="Product Name"
+    >
+
+    <input
+        id="price"
+        type="number"
+        placeholder="Price"
+    >
+
+    <input
+        id="category"
+        placeholder="Category"
+    >
+
+    <input
+        id="stock"
+        type="number"
+        placeholder="Stock"
+    >
+
+    <button onclick="addProduct()">
+        Add Product
+    </button>
+
+</div>
+
+
+<h2>Products</h2>
+
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>Name</th>
+
+            <th>Price</th>
+
+            <th>Category</th>
+
+            <th>Stock</th>
+
+            <th>Actions</th>
+
+        </tr>
+
+    </thead>
+
+
+    <tbody id="products">
+
+    </tbody>
+
+</table>
+
+
+<script>
+
+
+async function loadProducts() {
+
+    const response =
+        await fetch("/api/products");
+
+    const products =
+        await response.json();
+
+
+    const table =
+        document.getElementById("products");
+
+
+    table.innerHTML = "";
+
+
+    products.forEach(product => {
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>${product.name}</td>
+
+            <td>₹${product.price}</td>
+
+            <td>${product.category}</td>
+
+            <td>${product.stock}</td>
+
+            <td>
+
+                <button
+                    onclick="editProduct('${product.id}')">
+
+                    Edit
+
+                </button>
+
+
+                <button
+                    onclick="deleteProduct('${product.id}')">
+
+                    Delete
+
+                </button>
+
+            </td>
+
+        `;
+
+
+        table.appendChild(row);
+
+    });
+
+}
+
+
+async function addProduct() {
+
+    const name =
+        document.getElementById("name").value;
+
+    const price =
+        document.getElementById("price").value;
+
+    const category =
+        document.getElementById("category").value;
+
+    const stock =
+        document.getElementById("stock").value;
+
+
+    const product = {
+
+        name: name,
+
+        price: Number(price),
+
+        category: category,
+
+        stock: Number(stock)
+
+    };
+
+
+    await fetch(
+        "/api/products",
+        {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type":
+                    "application/json"
+
+            },
+
+            body:
+                JSON.stringify(product)
+
+        }
+    );
+
+
+    clearForm();
+
+    loadProducts();
+
+}
+
+
+async function deleteProduct(id) {
+
+    const confirmed =
+        confirm(
+            "Are you sure you want to delete this product?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    await fetch(
+        `/api/products/${id}`,
+        {
+
+            method: "DELETE"
+
+        }
+    );
+
+
+    loadProducts();
+
+}
+
+
+async function editProduct(id) {
+
+    const response =
+        await fetch(
+            `/api/products/${id}`
+        );
+
+
+    const product =
+        await response.json();
+
+
+    const name =
+        prompt(
+            "Product name:",
+            product.name
+        );
+
+
+    const price =
+        prompt(
+            "Price:",
+            product.price
+        );
+
+
+    const category =
+        prompt(
+            "Category:",
+            product.category
+        );
+
+
+    const stock =
+        prompt(
+            "Stock:",
+            product.stock
+        );
+
+
+    if (
+        name === null ||
+        price === null ||
+        category === null ||
+        stock === null
+    ) {
+
+        return;
+
+    }
+
+
+    const updatedProduct = {
+
+        name: name,
+
+        price: Number(price),
+
+        category: category,
+
+        stock: Number(stock)
+
+    };
+
+
+    await fetch(
+        `/api/products/${id}`,
+        {
+
+            method: "PUT",
+
+            headers: {
+
+                "Content-Type":
+                    "application/json"
+
+            },
+
+            body:
+                JSON.stringify(
+                    updatedProduct
+                )
+
+        }
+    );
+
+
+    loadProducts();
+
+}
+
+
+function clearForm() {
+
+    document.getElementById("name").value = "";
+
+    document.getElementById("price").value = "";
+
+    document.getElementById("category").value = "";
+
+    document.getElementById("stock").value = "";
+
+}
+
+
+loadProducts();
+
+
+</script>
+
+
+</body>
+
+</html>
